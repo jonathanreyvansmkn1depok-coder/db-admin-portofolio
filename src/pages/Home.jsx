@@ -146,14 +146,14 @@ export default function Home() {
               <div className="flex items-center gap-2"><FaBriefcase className="text-green-500" /> Available for Projects</div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <Link to="/contact">
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-3 bg-white text-gray-900 rounded-full font-bold shadow-lg hover:bg-gray-200 transition flex items-center justify-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start w-full">
+              <Link to="/contact" className="w-full sm:w-auto">
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto px-8 py-3 bg-white text-gray-900 rounded-full font-bold shadow-lg hover:bg-gray-200 transition flex items-center justify-center gap-2">
                   Hire Me Now <span className="text-xl">🚀</span>
                 </motion.button>
               </Link>
-              <a href="#" onClick={(e) => e.preventDefault()}>
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-3 border border-gray-600 text-white rounded-full font-medium hover:bg-gray-800 transition flex items-center justify-center gap-2">
+              <a href="/resume.pdf" download="CV Jonathan Reyvan.pdf" className="w-full sm:w-auto">
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto px-8 py-3 border border-gray-600 text-white rounded-full font-medium hover:bg-gray-800 transition flex items-center justify-center gap-2">
                   <FaDownload /> Download CV
                 </motion.button>
               </a>

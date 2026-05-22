@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FaPaperPlane, FaUser, FaEnvelope, FaCommentDots, FaPhone, FaMapMarkerAlt } from "react-icons/fa";
-
 export default function Contact() {
   const [formData, setFormData] = useState({
     name: '',
@@ -25,7 +24,7 @@ export default function Contact() {
       // --- LOGIKA PENGIRIMAN DATA KE LOCALHOST ---
       console.log("Mengirim data ke backend...", formData); // Cek Console Browser
 
-      const response = await fetch('http://localhost:5000/api/messages', {
+      const response = await fetch('https://backend-production-1825.up.railway.app/api/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
