@@ -83,6 +83,12 @@ app.post('/api/messages', (req, res) => {
 // Railway wajib pakai process.env.PORT
 const PORT = process.env.PORT || 5000;
 
+app.get('/', (req, res) => {
+    res.json({
+        status: 'Backend Railway Aktif'
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Backend server running on port ${PORT}`);
 });
