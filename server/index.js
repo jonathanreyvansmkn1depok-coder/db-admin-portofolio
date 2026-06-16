@@ -10,7 +10,9 @@ app.use(cors());
 app.use(express.json());
 
 
-// Koneksi Database Railway
+// =========================
+// KONEKSI DATABASE RAILWAY
+// =========================
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -19,7 +21,6 @@ const db = mysql.createConnection({
     port: process.env.DB_PORT
 });
 
-// Cek koneksi database
 db.connect((err) => {
     if (err) {
         console.error('❌ Error konek database:', err);
@@ -28,61 +29,21 @@ db.connect((err) => {
     }
 });
 
-// API kirim pesan
-app.post('/api/messages', (req, res) => {
 
-    const { name, email, message } = req.body;
-
-    console.log("🔥 DATA MASUK:");
-    console.log("Nama:", name);
-    console.log("Email:", email);
-    console.log("Pesan:", message);
-
-    const sql =
-    `
-    INSERT INTO messages
-    (name,email,message)
-    VALUES (?,?,?)
-    `;
-
-    db.query(
-        sql,
-        [name,email,message],
-        (err,result)=>{
-
-            if(err){
-
-                console.error(
-                    "❌ Gagal simpan:",
-                    err
-                );
-
-                return res
-                .status(500)
-                .json({
-                    error:err.message
-                });
-
-            }
-
-            console.log(
-                "✅ Berhasil simpan ID:",
-                result.insertId
-            );
-
-            res.json({
-                success:true,
-                id:result.insertId
-            });
-
-        }
-    );
-
+// =========================
+// ROOT ENDPOINT
+// =========================
+app.get('/', (req, res) => {
+    res.json({
+        status: 'Backend Railway Aktif'
+    });
 });
 
-// Railway wajib pakai process.env.PORT
-const PORT = process.env.PORT || 5000;
 
+// =========================
+// TEST DATABASE
+// (boleh dihapus nanti)
+// =========================
 app.get('/test-db', (req, res) => {
 
     db.query(
@@ -101,6 +62,106 @@ app.get('/test-db', (req, res) => {
 
 });
 
+
+// =========================
+// SIMPAN PESAN CONTACT FORM
+// =========================
+app.post('/api/messages', (req, res) => {
+
+    const { name, email, message } = req.body;
+
+    // Validasi sederhana
+    if (!name || !email || !message) {
+        return res.status(400).json({
+            success: false,
+            error: 'Semua field wajib diisi'
+        });
+    }
+
+    console.log('🔥 DATA MASUK');
+    console.log('Nama:', name);
+    console.log('Email:', email);
+    console.log('Pesan:', message);
+
+    const sql = `
+        INSERT INTO messages
+        (name, email, message)
+        VALUES (?, ?, ?)
+    `;
+
+    db.query(
+        sql,
+        [name, email, message],
+        (err, result) => {
+
+            if (err) {
+
+                console.error(
+                    '❌ Gagal simpan:',
+                    err
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    error: err.message
+                });
+
+            }
+
+            console.log(
+                '✅ Berhasil simpan ID:',
+                result.insertId
+            );
+
+            res.json({
+                success: true,
+                id: result.insertId
+            });
+
+        }
+    );
+
+});
+
+
+// =========================
+// AMBIL SEMUA PESAN
+// (untuk dashboard admin)
+// =========================
+app.get('/api/messages', (req, res) => {
+
+    db.query(
+        `
+        SELECT *
+        FROM messages
+        ORDER BY id DESC
+        `,
+        (err, result) => {
+
+            if (err) {
+
+                return res.status(500).json({
+                    success: false,
+                    error: err.message
+                });
+
+            }
+
+            res.json(result);
+
+        }
+    );
+
+});
+
+
+// =========================
+// START SERVER
+// =========================
+const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-    console.log(`Backend server running on port ${PORT}`);
+    console.log(
+        `🚀 Backend server running on port ${PORT}`
+    );
 });
