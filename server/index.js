@@ -3,6 +3,8 @@ require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 
@@ -228,6 +230,77 @@ app.delete('/api/messages/:id', (req, res) => {
 
 });
 
+// =========================
+// LOGIN ADMIN
+// =========================
+app.post('/api/admin/login', (req, res) => {
+
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({
+            success: false,
+            message: 'Email dan password wajib diisi'
+        });
+    }
+
+    db.query(
+        'SELECT * FROM admins WHERE email = ?',
+        [email],
+        async (err, result) => {
+
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    error: err.message
+                });
+            }
+
+            if (result.length === 0) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Email tidak ditemukan'
+                });
+            }
+
+            const admin = result[0];
+
+            const cocok = await bcrypt.compare(
+                password,
+                admin.password
+            );
+
+            if (!cocok) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Password salah'
+                });
+            }
+
+            const token = jwt.sign(
+                {
+                    id: admin.id,
+                    email: admin.email
+                },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: '7d'
+                }
+            );
+
+            res.json({
+                success: true,
+                token,
+                admin: {
+                    id: admin.id,
+                    email: admin.email
+                }
+            });
+
+        }
+    );
+
+});
 
 // =========================
 // START SERVER
