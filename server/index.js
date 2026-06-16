@@ -5,12 +5,12 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const auth = require('./middleware/auth');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
 
 // =========================
 // KONEKSI DATABASE RAILWAY
@@ -33,7 +33,6 @@ db.connect((err) => {
 
 });
 
-
 // =========================
 // ROOT ENDPOINT
 // =========================
@@ -44,7 +43,6 @@ app.get('/', (req, res) => {
     });
 
 });
-
 
 // =========================
 // TEST DATABASE
@@ -68,7 +66,6 @@ app.get('/test-db', (req, res) => {
 
 });
 
-
 // =========================
 // SIMPAN PESAN
 // =========================
@@ -91,13 +88,13 @@ app.post('/api/messages', (req, res) => {
 
     const sql = `
         INSERT INTO messages
-        (name, email, message)
-        VALUES (?, ?, ?)
+        (name, email, message, status)
+        VALUES (?, ?, ?, ?)
     `;
 
     db.query(
         sql,
-        [name, email, message],
+        [name, email, message, 'unread'],
         (err, result) => {
 
             if (err) {
@@ -119,14 +116,18 @@ app.post('/api/messages', (req, res) => {
 
 });
 
-
 // =========================
 // AMBIL SEMUA PESAN
 // =========================
-app.get('/api/messages', (req, res) => {
+app.get('/api/messages', auth, (req, res) => {
 
     const sql = `
-        SELECT *
+        SELECT
+            id,
+            name,
+            email,
+            message,
+            status
         FROM messages
         ORDER BY id DESC
     `;
@@ -151,11 +152,10 @@ app.get('/api/messages', (req, res) => {
 
 });
 
-
 // =========================
 // AMBIL 1 PESAN BERDASARKAN ID
 // =========================
-app.get('/api/messages/:id', (req, res) => {
+app.get('/api/messages/:id', auth, (req, res) => {
 
     const { id } = req.params;
 
@@ -189,11 +189,45 @@ app.get('/api/messages/:id', (req, res) => {
 
 });
 
+// =========================
+// UBAH STATUS PESAN
+// =========================
+app.put('/api/messages/:id/read', auth, (req, res) => {
+
+    const { id } = req.params;
+
+    db.query(
+        `
+        UPDATE messages
+        SET status = 'read'
+        WHERE id = ?
+        `,
+        [id],
+        (err, result) => {
+
+            if (err) {
+
+                return res.status(500).json({
+                    success: false,
+                    error: err.message
+                });
+
+            }
+
+            res.json({
+                success: true,
+                message: 'Status berhasil diubah'
+            });
+
+        }
+    );
+
+});
 
 // =========================
 // HAPUS PESAN
 // =========================
-app.delete('/api/messages/:id', (req, res) => {
+app.delete('/api/messages/:id', auth, (req, res) => {
 
     const { id } = req.params;
 
@@ -229,6 +263,41 @@ app.delete('/api/messages/:id', (req, res) => {
     );
 
 });
+
+app.put(
+    '/api/messages/:id/read',
+    auth,
+    (req, res) => {
+
+        const { id } = req.params
+
+        db.query(
+            `
+            UPDATE messages
+            SET status = 'read'
+            WHERE id = ?
+            `,
+            [id],
+            (err, result) => {
+
+                if (err) {
+                    return res.status(500).json({
+                        success: false,
+                        error: err.message
+                    })
+                }
+
+                res.json({
+                    success: true,
+                    message:
+                        'Pesan ditandai sudah dibaca'
+                })
+
+            }
+        )
+
+    }
+)
 
 // =========================
 // LOGIN ADMIN
