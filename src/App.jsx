@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import About from './pages/About'
 import Projects from './pages/Projects'
 import Contact from './pages/Contact'
+import Admin from './pages/Admin'
 
 // 1. Import komponen animasi background
 import BackgroundAnimation from './components/BackgroundAnimation'
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/admin" element={<Admin />} />
           </Routes>
         </main>
 
