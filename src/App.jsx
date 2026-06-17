@@ -8,8 +8,8 @@ import About from "./pages/About";
 import Projects from "./pages/Projects";
 import Contact from "./pages/Contact";
 
-import Login from "./pages/Login";
 import Admin from "./pages/Admin";
+import Login from "./pages/Login";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import BackgroundAnimation from "./components/BackgroundAnimation";

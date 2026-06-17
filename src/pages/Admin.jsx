@@ -3,6 +3,15 @@ import axios from 'axios'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 
+import {
+    PieChart,
+    Pie,
+    Cell,
+    Tooltip,
+    Legend,
+    ResponsiveContainer
+} from 'recharts'
+
 export default function Admin() {
 
     const [messages, setMessages] = useState([])
@@ -25,6 +34,22 @@ const unreadMessages =
     messages.filter(
         msg => msg.status === 'unread'
     ).length
+
+    const chartData = [
+  {
+    name: 'Sudah Dibaca',
+    value: readMessages
+  },
+  {
+    name: 'Belum Dibaca',
+    value: unreadMessages
+  }
+]
+
+const COLORS = [
+    '#22c55e',
+    '#eab308'
+]
 
     const API_URL =
         'https://backend-production-1825.up.railway.app/api/messages'
@@ -364,6 +389,77 @@ const totalPages =
 
             </div>
 
+            <div
+                className="
+                    bg-slate-800
+                    rounded-xl
+                    p-6
+                    mb-8
+                "
+            >
+
+                <h2
+                    className="
+                        text-2xl
+                        font-bold
+                        mb-4
+                    "
+                >
+                    Statistik Pesan
+                </h2>
+
+                <div
+                    className="
+                        w-full
+                        h-[350px]
+                    "
+                >
+
+                    <ResponsiveContainer
+                        width="100%"
+                        height="100%"
+                    >
+
+                        <PieChart>
+
+                            <Pie
+                                data={chartData}
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={120}
+                                fill="#8884d8"
+                                dataKey="value"
+                                label
+                            >
+
+                                {chartData.map(
+                                    (entry, index) => (
+
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={
+                                                COLORS[index %
+                                                COLORS.length]
+                                            }
+                                        />
+
+                                    )
+                                )}
+
+                            </Pie>
+
+                            <Tooltip />
+
+                            <Legend />
+
+                        </PieChart>
+
+                    </ResponsiveContainer>
+
+                </div>
+
+            </div>
+
             <div className="mb-6">
 
                 <input
@@ -428,134 +524,119 @@ const totalPages =
                 <table className="w-full border border-gray-700">
 
                     <thead>
+    <tr className="bg-gray-800">
 
-                        <tr className="bg-gray-800">
+        <th className="p-3">
+            ID
+        </th>
 
-                            <th className="p-3">
-                                ID
-                            </th>
+        <th className="p-3">
+            Nama
+        </th>
 
-                            <th className="p-3">
-                                Nama
-                            </th>
+        <th className="p-3">
+            Email
+        </th>
 
-                            <th className="p-3">
-                                Email
-                            </th>
+        <th className="p-3">
+            Tanggal
+        </th>
 
-                            <th className="p-3">
-                                Status
-                            </th>
+        <th className="p-3">
+            Status
+        </th>
 
-                            <th className="p-3">
-                                Pesan
-                            </th>
+        <th className="p-3">
+            Pesan
+        </th>
 
-                            <th className="p-3">
-                                Aksi
-                            </th>
+        <th className="p-3">
+            Aksi
+        </th>
 
-                            <th className="p-3">
-                                Tanggal
-                            </th>
-
-                        </tr>
-
-                    </thead>
+    </tr>
+</thead>
 
                     <tbody>
 
-                        {currentMessages.map((msg) => (
+{currentMessages.map((msg) => (
 
-                            <tr
-                                key={msg.id}
-                                className="border-t border-gray-700"
-                            >
+    <tr
+        key={msg.id}
+        className="border-t border-gray-700"
+    >
 
-                                <td className="p-3">
-                                    {msg.id}
-                                </td>
+        <td className="p-3">
+            {msg.id}
+        </td>
 
-                                <td className="p-3">
-                                    {msg.name}
-                                </td>
+        <td className="p-3">
+            {msg.name}
+        </td>
 
-                                <td className="p-3">
-                                    {msg.email}
-                                </td>
+        <td className="p-3">
+            {msg.email}
+        </td>
 
-                                <td className="p-3">
-                                    -
-                                </td>
+        <td className="p-3">
+            {msg.created_at
+                ? new Date(msg.created_at).toLocaleDateString('id-ID')
+                : '-'}
+        </td>
 
-                                <td className="p-3">
+        <td className="p-3">
+            <span
+                className={
+                    msg.status === 'read'
+                        ? 'text-green-400 font-bold'
+                        : 'text-yellow-400 font-bold'
+                }
+            >
+                {msg.status}
+            </span>
+        </td>
 
-                                    <span
-                                        className={
-                                            msg.status === 'read'
-                                                ? 'text-green-400 font-bold'
-                                                : 'text-yellow-400 font-bold'
-                                        }
-                                    >
-                                        {msg.status}
-                                    </span>
+        <td className="p-3">
+            {msg.message}
+        </td>
 
-                                </td>
+        <td className="p-3 flex gap-2">
 
-                                <td className="p-3">
-                                    {msg.message}
-                                </td>
+            {msg.status === 'unread' && (
+                <button
+                    onClick={() => markAsRead(msg.id)}
+                    className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
+                >
+                    Tandai Dibaca
+                </button>
+            )}
 
-                                <td className="p-3 flex gap-2">
+            <button
+                onClick={() => {
+                    setSelectedMessage(msg);
+                    if (msg.status === 'unread') {
+                        markAsRead(msg.id);
+                    }
+                }}
+                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
+            >
+                Detail
+            </button>
 
-                                    {msg.status === 'unread' && (
+            <button
+                onClick={() => deleteMessage(msg.id)}
+                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
+            >
+                Hapus
+            </button>
 
-                                        <button
-                                            onClick={() =>
-                                                markAsRead(
-                                                    msg.id
-                                                )
-                                            }
-                                            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
-                                        >
-                                            Tandai Dibaca
-                                        </button>
+        </td>
 
-                                    )}
+    </tr>
 
-                                    <button
-                                        onClick={() =>
-                                            setSelectedMessage(msg)
-                                        }
-                                        className="
-                                            bg-green-600
-                                            hover:bg-green-700
-                                            px-4
-                                            py-2
-                                            rounded
-                                        "
-                                    >
-                                        Detail
-                                    </button>
-                                    
-                                    <button
-                                        onClick={() =>
-                                            deleteMessage(
-                                                msg.id
-                                            )
-                                        }
-                                        className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
-                                    >
-                                        Hapus
-                                    </button>
+))}
 
-                                </td>
-
-                            </tr>
-
-                        ))}
-
-                    </tbody>
+</tbody>
 
 </table>
 
@@ -624,8 +705,11 @@ const totalPages =
                 bg-slate-900
                 p-8
                 rounded-xl
-                w-[600px]
-                max-w-[90%]
+                w-[650px]
+                max-w-[95%]
+                border
+                border-slate-700
+                shadow-2xl
             "
         >
 
@@ -634,60 +718,110 @@ const totalPages =
                     text-2xl
                     font-bold
                     mb-6
+                    text-white
                 "
             >
                 Detail Pesan
             </h2>
 
-            <p className="mb-3">
-                <strong>Nama:</strong>
-                {' '}
-                {selectedMessage.name}
-            </p>
+            <div className="space-y-4">
 
-            <p className="mb-3">
-                <strong>Email:</strong>
-                {' '}
-                {selectedMessage.email}
-            </p>
+                <p>
+                    <strong>Nama:</strong>
+                    {' '}
+                    {selectedMessage.name}
+                </p>
 
-            <div className="mb-6">
+                <p>
+                    <strong>Email:</strong>
+                    {' '}
+                    {selectedMessage.email}
+                </p>
 
-                <strong>Pesan:</strong>
+                <p>
+                    <strong>Tanggal:</strong>
+                    {' '}
+                    {selectedMessage.created_at
+                        ? new Date(
+                            selectedMessage.created_at
+                        ).toLocaleString(
+                            'id-ID',
+                            {
+                                day: '2-digit',
+                                month: 'long',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }
+                        )
+                        : '-'}
+                </p>
 
-                <div
-                    className="
-                        mt-2
-                        bg-slate-800
-                        p-4
-                        rounded
-                    "
-                >
-                    {selectedMessage.message}
+                <p>
+                    <strong>Status:</strong>
+                    {' '}
+
+                    <span
+                        className={
+                            selectedMessage.status === 'read'
+                                ? 'text-green-400 font-bold'
+                                : 'text-yellow-400 font-bold'
+                        }
+                    >
+                        {selectedMessage.status === 'read'
+                            ? 'Sudah Dibaca'
+                            : 'Belum Dibaca'}
+                    </span>
+
+                </p>
+
+                <div>
+
+                    <strong>Pesan:</strong>
+
+                    <div
+                        className="
+                            mt-2
+                            bg-slate-800
+                            p-4
+                            rounded
+                            leading-relaxed
+                            whitespace-pre-wrap
+                        "
+                    >
+                        {selectedMessage.message}
+                    </div>
+
                 </div>
 
             </div>
 
-            <button
-                onClick={() =>
-                    setSelectedMessage(null)
-                }
-                className="
-                    bg-red-600
-                    hover:bg-red-700
-                    px-4
-                    py-2
-                    rounded
-                "
-            >
-                Tutup
-            </button>
+            <div className="mt-6 flex justify-end">
+
+                <button
+                    onClick={() =>
+                        setSelectedMessage(null)
+                    }
+                    className="
+                        bg-red-600
+                        hover:bg-red-700
+                        px-5
+                        py-2
+                        rounded
+                        transition
+                    "
+                >
+                    Tutup
+                </button>
+
+            </div>
 
         </div>
 
     </div>
 
-)}            
+)}
+
             </div>
 
         </div>
