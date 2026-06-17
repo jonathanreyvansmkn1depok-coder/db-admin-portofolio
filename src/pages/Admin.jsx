@@ -1,10 +1,30 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
 
 export default function Admin() {
 
     const [messages, setMessages] = useState([])
     const [loading, setLoading] = useState(true)
+    const [search, setSearch] = useState('')
+    const [filterStatus, setFilterStatus] = useState('all')
+    const [selectedMessage, setSelectedMessage] = useState(null)
+    const [currentPage, setCurrentPage] = useState(1)
+
+const messagesPerPage = 5
+
+    const totalMessages = messages.length
+
+const readMessages =
+    messages.filter(
+        msg => msg.status === 'read'
+    ).length
+
+const unreadMessages =
+    messages.filter(
+        msg => msg.status === 'unread'
+    ).length
 
     const API_URL =
         'https://backend-production-1825.up.railway.app/api/messages'
@@ -32,6 +52,8 @@ export default function Admin() {
                     }
                 }
             )
+            
+            console.log('DATA API:', res.data)
 
             setMessages(res.data)
 
@@ -142,30 +164,261 @@ export default function Admin() {
 
     }
 
+const filteredMessages =
+    messages.filter((msg) => {
+
+        const cocokSearch =
+
+            msg.name
+                .toLowerCase()
+                .includes(search.toLowerCase())
+
+            ||
+
+            msg.email
+                .toLowerCase()
+                .includes(search.toLowerCase())
+
+            ||
+
+            msg.message
+                .toLowerCase()
+                .includes(search.toLowerCase())
+
+        const cocokStatus =
+
+            filterStatus === 'all'
+
+            ||
+
+            msg.status === filterStatus
+
+        return (
+            cocokSearch &&
+            cocokStatus
+        )
+
+    })
+
+const indexOfLastMessage =
+    currentPage * messagesPerPage
+
+const indexOfFirstMessage =
+    indexOfLastMessage - messagesPerPage
+
+const currentMessages =
+    filteredMessages.slice(
+        indexOfFirstMessage,
+        indexOfLastMessage
+    )
+
+const totalPages =
+    Math.ceil(
+        filteredMessages.length /
+        messagesPerPage
+    )
+
+    const exportExcel = () => {
+
+    const data = messages.map(
+        (msg) => ({
+
+            ID: msg.id,
+
+            Nama: msg.name,
+
+            Email: msg.email,
+
+            Status: msg.status,
+
+            Pesan: msg.message
+
+        })
+    )
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(data)
+
+    const workbook =
+        XLSX.utils.book_new()
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        'Pesan'
+    )
+
+    const excelBuffer =
+        XLSX.write(
+            workbook,
+            {
+                bookType: 'xlsx',
+                type: 'array'
+            }
+        )
+
+    const fileData =
+        new Blob(
+            [excelBuffer],
+            {
+                type:
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            }
+        )
+
+    saveAs(
+        fileData,
+        'pesan-contact.xlsx'
+    )
+
+}
+
     return (
 
         <div className="max-w-7xl mx-auto p-8 text-white">
 
             <div className="flex justify-between items-center mb-8">
 
-                <h1 className="text-4xl font-bold">
-                    Dashboard Admin
-                </h1>
+    <h1 className="text-4xl font-bold">
+        Dashboard Admin
+    </h1>
+
+    <div className="flex gap-3">
+
+        <button
+            onClick={exportExcel}
+            className="
+                bg-green-600
+                hover:bg-green-700
+                px-4
+                py-2
+                rounded
+            "
+        >
+            Export Excel
+        </button>
+
+        <button
+            onClick={() => {
+
+                localStorage.removeItem(
+                    'token'
+                )
+
+                window.location.href =
+                    '/login'
+
+            }}
+            className="
+                bg-red-600
+                hover:bg-red-700
+                px-4
+                py-2
+                rounded
+            "
+        >
+            Logout
+        </button>
+
+    </div>
+
+</div>
+
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
+
+                <div className="bg-slate-800 p-6 rounded-xl text-center">
+
+                    <h2 className="text-gray-300">
+                        Total Pesan
+                    </h2>
+
+                    <p className="text-4xl font-bold mt-2">
+                        {totalMessages}
+                    </p>
+
+                </div>
+
+                <div className="bg-green-800 p-6 rounded-xl text-center">
+
+                    <h2 className="text-gray-100">
+                        Sudah Dibaca
+                    </h2>
+
+                    <p className="text-4xl font-bold mt-2">
+                        {readMessages}
+                    </p>
+
+                </div>
+
+                <div className="bg-yellow-600 p-6 rounded-xl text-center">
+
+                    <h2 className="text-black">
+                        Belum Dibaca
+                    </h2>
+
+                    <p className="text-4xl font-bold mt-2">
+                        {unreadMessages}
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div className="mb-6">
+
+                <input
+                    type="text"
+                    placeholder="Cari nama, email, atau pesan..."
+                    value={search}
+                    onChange={(e) =>
+                        setSearch(e.target.value)
+                    }
+                    className="
+                        w-full
+                        p-3
+                        rounded-lg
+                        bg-slate-800
+                        border
+                        border-slate-600
+                        text-white
+                    "
+                />
+
+            </div>
+
+            <div className="flex flex-wrap gap-4 mb-6">
 
                 <button
-                    onClick={() => {
-
-                        localStorage.removeItem(
-                            "token"
-                        )
-
-                        window.location.href =
-                            "/login"
-
-                    }}
-                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
+                    onClick={() => setFilterStatus('all')}
+                    className={`px-4 py-2 rounded-lg ${
+                        filterStatus === 'all'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-600 text-gray-300'
+                    }`}
                 >
-                    Logout
+                    Semua
+                </button>
+
+                <button
+                    onClick={() => setFilterStatus('read')}
+                    className={`px-4 py-2 rounded-lg ${
+                        filterStatus === 'read'
+                            ? 'bg-green-600 text-white'
+                            : 'bg-slate-600 text-gray-300'
+                    }`}
+                >
+                    Sudah Dibaca
+                </button>
+
+                <button
+                    onClick={() => setFilterStatus('unread')}
+                    className={`px-4 py-2 rounded-lg ${
+                        filterStatus === 'unread'
+                            ? 'bg-yellow-600 text-black'
+                            : 'bg-slate-600 text-gray-300'
+                    }`}
+                >
+                    Belum Dibaca
                 </button>
 
             </div>
@@ -202,13 +455,17 @@ export default function Admin() {
                                 Aksi
                             </th>
 
+                            <th className="p-3">
+                                Tanggal
+                            </th>
+
                         </tr>
 
                     </thead>
 
                     <tbody>
 
-                        {messages.map((msg) => (
+                        {currentMessages.map((msg) => (
 
                             <tr
                                 key={msg.id}
@@ -225,6 +482,10 @@ export default function Admin() {
 
                                 <td className="p-3">
                                     {msg.email}
+                                </td>
+
+                                <td className="p-3">
+                                    -
                                 </td>
 
                                 <td className="p-3">
@@ -264,6 +525,21 @@ export default function Admin() {
 
                                     <button
                                         onClick={() =>
+                                            setSelectedMessage(msg)
+                                        }
+                                        className="
+                                            bg-green-600
+                                            hover:bg-green-700
+                                            px-4
+                                            py-2
+                                            rounded
+                                        "
+                                    >
+                                        Detail
+                                    </button>
+                                    
+                                    <button
+                                        onClick={() =>
                                             deleteMessage(
                                                 msg.id
                                             )
@@ -281,8 +557,137 @@ export default function Admin() {
 
                     </tbody>
 
-                </table>
+</table>
 
+<div className="flex justify-center gap-2 mt-6">
+
+    <button
+        disabled={currentPage === 1}
+        onClick={() =>
+            setCurrentPage(
+                currentPage - 1
+            )
+        }
+        className="
+            bg-slate-700
+            px-4
+            py-2
+            rounded
+            disabled:opacity-50
+        "
+    >
+        Prev
+    </button>
+
+    <span className="px-4 py-2">
+        Halaman {currentPage} dari {totalPages}
+    </span>
+
+    <button
+        disabled={
+            currentPage === totalPages
+        }
+        onClick={() =>
+            setCurrentPage(
+                currentPage + 1
+            )
+        }
+        className="
+            bg-slate-700
+            px-4
+            py-2
+            rounded
+            disabled:opacity-50
+        "
+    >
+        Next
+    </button>
+
+</div>
+
+{selectedMessage && (
+
+    <div
+        className="
+            fixed
+            inset-0
+            bg-black/70
+            flex
+            items-center
+            justify-center
+            z-50
+        "
+    >
+
+        <div
+            className="
+                bg-slate-900
+                p-8
+                rounded-xl
+                w-[600px]
+                max-w-[90%]
+            "
+        >
+
+            <h2
+                className="
+                    text-2xl
+                    font-bold
+                    mb-6
+                "
+            >
+                Detail Pesan
+            </h2>
+
+            <p className="mb-3">
+                <strong>Nama:</strong>
+                {' '}
+                {selectedMessage.name}
+            </p>
+
+            <p className="mb-3">
+                <strong>Email:</strong>
+                {' '}
+                {selectedMessage.email}
+            </p>
+
+            <div className="mb-6">
+
+                <strong>Pesan:</strong>
+
+                <div
+                    className="
+                        mt-2
+                        bg-slate-800
+                        p-4
+                        rounded
+                    "
+                >
+                    {selectedMessage.message}
+                </div>
+
+            </div>
+
+            <button
+                onClick={() =>
+                    setSelectedMessage(null)
+                }
+                className="
+                    bg-red-600
+                    hover:bg-red-700
+                    px-4
+                    py-2
+                    rounded
+                "
+            >
+                Tutup
+            </button>
+
+        </div>
+
+    </div>
+
+)}            
             </div>
 
         </div>

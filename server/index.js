@@ -59,12 +59,58 @@ app.get('/test-db', (req, res) => {
                 });
             }
 
+            console.log(result);
+
             res.json(result);
 
         }
     );
 
 });
+
+app.get('/columns', (req, res) => {
+
+    db.query(
+        'SHOW COLUMNS FROM messages',
+        (err, result) => {
+
+            if (err) {
+                return res.json(err)
+            }
+
+            res.json(result)
+
+        }
+    )
+
+})
+
+app.get('/test-messages', (req, res) => {
+
+    db.query(
+        `
+        SELECT
+            id,
+            name,
+            email,
+            message,
+            status,
+            created_at
+        FROM messages
+        LIMIT 1
+        `,
+        (err, result) => {
+
+            if (err) {
+                return res.json(err)
+            }
+
+            res.json(result)
+
+        }
+    )
+
+})
 
 // =========================
 // SIMPAN PESAN
@@ -120,14 +166,15 @@ app.post('/api/messages', (req, res) => {
 // AMBIL SEMUA PESAN
 // =========================
 app.get('/api/messages', auth, (req, res) => {
-
+console.log('ROUTE MESSAGES DIPANGGIL')
     const sql = `
         SELECT
             id,
             name,
             email,
             message,
-            status
+            status,
+            created_at
         FROM messages
         ORDER BY id DESC
     `;
@@ -144,7 +191,8 @@ app.get('/api/messages', auth, (req, res) => {
                 });
 
             }
-
+            console.log('HASIL SQL:')
+            console.log(result[0])
             res.json(result);
 
         }
